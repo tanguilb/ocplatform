@@ -1,7 +1,7 @@
 oc_platform_home:
     path:     /{page}
     defaults:
-        _controller: OCPlatformBundle:Advert:Index
+        _controller: OCPlatformBundle:Advert:index
         page:        1
     requirements:
         page: \d*
@@ -9,14 +9,14 @@ oc_platform_home:
 oc_platform_view:
     path:     /advert/{id}
     defaults:
-        _controller: OCPlatformBundle:Advert:View
+        _controller: OCPlatformBundle:Advert:view
     requirements:
         id: \d+
 
 oc_platform_add:
     path:     /add
     defaults:
-        _controller: OCPlatformBundle:Advert:Add
+        _controller: OCPlatformBundle:Advert:add
 
 oc_platform_edit:
     path:     /edit/{id}
