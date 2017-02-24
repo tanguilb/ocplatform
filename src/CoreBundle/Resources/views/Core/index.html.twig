@@ -1,1 +1,11 @@
 {% extends 'CoreBundle::layout.html.twig' %}
+{% block title %}Accueil - {{ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="row">
+    {% for message in app.session.flashbag.get('info') %}
+        <p>Message flash : {{ message|upper }}</p>
+    {% endfor %}
+    {{ render(controller("OCPlatformBundle:Advert:lastThreeAdvert", {'limit': 3})) }}
+    </div>
+{% endblock %}

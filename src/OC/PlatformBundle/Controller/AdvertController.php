@@ -10,11 +10,7 @@ namespace OC\PlatformBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-//use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use TLB\Platform\Bundle\TLBPlatformBundle;
 
 class AdvertController extends Controller
 {
@@ -120,9 +116,22 @@ class AdvertController extends Controller
           array('id' => 2, 'title' => 'Recherche des développeurs Symfony'),
           array('id' => 5, 'title' => 'Mission de webmaster'),
           array('id' => 9, 'title' => 'Offre de stage de webdesigner'),
+
         );
 
         return $this->render('OCPlatformBundle:Advert:menu.html.twig', array(
+            'listAdverts' => $listAdverts,
+        ));
+    }
+    public function lastThreeAdvertAction()
+    {
+        $listAdverts = array(
+            array('id' => 2, 'title' => 'Recherche des développeurs Symfony'),
+            array('id' => 5, 'title' => 'Mission de webmaster'),
+            array('id' => 9, 'title' => 'Offre de stage de webdesigner'),
+        );
+
+        return $this->render('OCPlatformBundle:Advert:lastThreeAdvert.html.twig', array(
             'listAdverts' => $listAdverts,
         ));
     }

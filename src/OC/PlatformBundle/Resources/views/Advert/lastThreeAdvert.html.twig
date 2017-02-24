@@ -1,0 +1,6 @@
+<h3>Les trois dernières annonces :</h3>
+<ul class="col-md-4">
+    {% for advert in listAdverts %}
+        <li>{{ advert.title }}</li>
+    {% endfor %}
+</ul>
