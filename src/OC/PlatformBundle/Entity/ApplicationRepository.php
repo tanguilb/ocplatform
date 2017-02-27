@@ -10,4 +10,14 @@ namespace OC\PlatformBundle\Entity;
  */
 class ApplicationRepository extends \Doctrine\ORM\EntityRepository
 {
+    public function getApplicationWithAdvert($limit)
+    {
+        $qb = $this->createQueryBuilder('a');
+        $qb->innerJoin('a.advert', 'adv')
+            ->addSelect('adv');
+
+        $qb->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
 }
