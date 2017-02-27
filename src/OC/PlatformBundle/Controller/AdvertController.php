@@ -20,33 +20,24 @@ class AdvertController extends Controller
 {
     public function indexAction($page)
     {
+        $em = $this->getDoctrine()->getManager();
         if($page < 1)
         {
             throw new NotFoundHttpException('page "' . $page .'" inexistante');
         }
+        $nbPerPage = 3;
 
-        $listAdverts = array(
-            array(
-                'title'   => 'Recherche développpeur Symfony',
-                'id'      => 1,
-                'author'  => 'Alexandre',
-                'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
-                'date'    => new \Datetime()),
-            array(
-                'title'   => 'Mission de webmaster',
-                'id'      => 2,
-                'author'  => 'Hugo',
-                'content' => 'Nous recherchons un webmaster capable de maintenir notre site internet. Blabla…',
-                'date'    => new \Datetime()),
-            array(
-                'title'   => 'Offre de stage webdesigner',
-                'id'      => 3,
-                'author'  => 'Mathieu',
-                'content' => 'Nous proposons un poste pour webdesigner. Blabla…',
-                'date'    => new \Datetime())
-        );
+        $listAdverts = $em->getRepository("OCPlatformBundle:Advert")->getAdverts($page, $nbPerPage);
+
+        $nbPages = ceil(count($listAdverts) / $nbPerPage);
+        if($page > $nbPages)
+        {
+            throw $this->createNotFoundException('La page ' . $page . " n'existe pas.");
+        }
         return $this->render('OCPlatformBundle:Advert:index.html.twig', array(
             'listAdverts' => $listAdverts,
+            'nbPages'     => $nbPages,
+            'page'        => $page,
         ));
 
     }
@@ -59,7 +50,7 @@ class AdvertController extends Controller
         $advert = $em->getRepository('OCPlatformBundle:Advert')->find($id);
 
         if (null === $advert) {
-            throw new NotFoundHttpException("L'annonce d'id ".$id." n'existe pas.");
+            throw new NotFoundHttpException("L'annonce ".$id." n'existe pas.");
         }
 
         // On récupère la liste des candidatures de cette annonce
@@ -83,54 +74,7 @@ class AdvertController extends Controller
     {
         $em = $this->getDoctrine()->getManager();
 
-        $advert = new Advert();
-        $advert->setTitle('Recherche développeur Symfony.');
-        $advert->setAuthor('Alexandre');
-        $advert->setContent("Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…");
 
-        $image = new Image();
-        $image->setUrl('http://sdz-upload.s3.amazonaws.com/prod/upload/job-de-reve.jpg');
-        $image->setAlt('Job de rêve');
-
-        // On lie l'image à l'annonce
-        $advert->setImage($image);
-
-        // Création d'une première candidature
-        $application1 = new Application();
-        $application1->setAuthor('Marine');
-        $application1->setContent("J'ai toutes les qualités requises.");
-
-        // Création d'une deuxième candidature par exemple
-        $application2 = new Application();
-        $application2->setAuthor('Pierre');
-        $application2->setContent("Je suis très motivé.");
-
-        // On lie les candidatures à l'annonce
-        $application1->setAdvert($advert);
-        $application2->setAdvert($advert);
-
-        $listSkills = $em->getRepository("OCPlatformBundle:Skill")->findAll();
-
-        foreach ($listSkills as $skill)
-        {
-            $advertSkill = new AdvertSkill();
-            $advertSkill->setAdvert($advert);
-            $advertSkill->setSkill($skill);
-            $advertSkill->setLevel('Expert');
-            $em->persist($advertSkill);
-        }
-
-
-        // Étape 1 : On « persiste » l'entité
-        $em->persist($advert);
-
-        // Étape 1 ter : pour cette relation pas de cascade lorsqu'on persiste Advert, car la relation est
-        // définie dans l'entité Application et non Advert. On doit donc tout persister à la main ici.
-        $em->persist($application1);
-        $em->persist($application2);
-
-        // Étape 2 : On « flush » tout ce qui a été persisté avant
-        $em->flush();
         if($request->isMethod('POST'))
         {
             $request->getSession()->getFlashBag()->add('notice', 'Annonce bien enregistré');
@@ -152,12 +96,6 @@ class AdvertController extends Controller
         $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();
 
 
-        foreach ($listCategories as $category)
-        {
-            $advert->addCategory($category);
-        }
-
-        $em->flush();
 
         if($request->isMethod('POST'))
         {
@@ -165,13 +103,7 @@ class AdvertController extends Controller
 
             return $this->redirectToRoute('oc_platform_view', array('id' => 5));
         }
-        $advert = array(
-            'title'   => 'Recherche développpeur Symfony',
-            'id'      => $id,
-            'author'  => 'Alexandre',
-            'content' => 'Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…',
-            'date'    => new \Datetime()
-        );
+
         return $this->render('OCPlatformBundle:Advert:edit.html.twig',array(
         'advert' => $advert));
     }
@@ -205,13 +137,14 @@ class AdvertController extends Controller
         return $this->render('OCPlatformBundle:Advert:form.html.twig');
     }
 
-    public function menuAction()
+    public function menuAction($limit)
     {
-        $listAdverts = array(
-          array('id' => 2, 'title' => 'Recherche des développeurs Symfony'),
-          array('id' => 5, 'title' => 'Mission de webmaster'),
-          array('id' => 9, 'title' => 'Offre de stage de webdesigner'),
-
+        $em = $this->getDoctrine()->getManager();
+        $listAdverts = $em->getRepository("OCPlatformBundle:Advert")->findBy(
+            array(),
+            array('date' => 'desc'),
+            $limit,
+            0
         );
 
         return $this->render('OCPlatformBundle:Advert:menu.html.twig', array(
@@ -220,11 +153,8 @@ class AdvertController extends Controller
     }
     public function lastThreeAdvertAction()
     {
-        $listAdverts = array(
-            array('id' => 2, 'title' => 'Recherche des développeurs Symfony'),
-            array('id' => 5, 'title' => 'Mission de webmaster'),
-            array('id' => 9, 'title' => 'Offre de stage de webdesigner'),
-        );
+        $em = $this->getDoctrine()->getManager();
+        $listAdverts = $em->getRepository("OCPlatformBundle:Advert")->findAll();
 
         return $this->render('OCPlatformBundle:Advert:lastThreeAdvert.html.twig', array(
             'listAdverts' => $listAdverts,
