@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * @ORM\Table(name="oc_application")
- * @ORM\Entity(repositoryClass="OC\PlatformBundle\Repository\ApplicationRepository")
+ * @ORM\Entity(repositoryClass="OC\PlatformBundle\Entity\ApplicationRepository")
  */
 class Application
 {
@@ -40,7 +40,7 @@ class Application
     private $date;
 
     /**
-     * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert")
+     * @ORM\ManyToOne(targetEntity="OC\PlatformBundle\Entity\Advert", inversedBy="applications")
      * @ORM\JoinColumn(nullable=false)
      */
     private $advert;
