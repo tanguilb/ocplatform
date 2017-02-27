@@ -11,6 +11,9 @@ namespace OC\PlatformBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use OC\PlatformBundle\Entity\Image;
+use OC\PlatformBundle\Entity\Advert;
+use OC\PlatformBundle\Entity\Application;
 
 class AdvertController extends Controller
 {
@@ -54,8 +57,9 @@ class AdvertController extends Controller
             'id'      => $id,
             'author'  => 'Alexandre',
             'content' => 'Nous recherchons un développeur Symfony2 débutant sur Lyon. Blabla…',
-            'date'    => new \Datetime()
+            'date'    => new \Datetime(),
         );
+
         return $this->render('OCPlatformBundle:Advert:view.html.twig', array(
             'id' => $id,
             'advert' => $advert,
@@ -64,12 +68,62 @@ class AdvertController extends Controller
 
     public function addAction(Request $request)
     {
-        $antispam = $this->container->get('oc_platform.antispam');
+        $advert = new Advert();
 
-        $text = '....';
-        if ($antispam->isSpam($text)){
-            throw new \Exception('Votre message à été détecté comme un spam');
-        }
+        $advert->setTitle('Recherche développeur Symfony.');
+
+        $advert->setAuthor('Alexandre');
+
+        $advert->setContent("Nous recherchons un développeur Symfony débutant sur Lyon. Blabla…");
+
+
+        // Création d'une première candidature
+
+        $application1 = new Application();
+
+        $application1->setAuthor('Marine');
+
+        $application1->setContent("J'ai toutes les qualités requises.");
+
+
+        // Création d'une deuxième candidature par exemple
+
+        $application2 = new Application();
+
+        $application2->setAuthor('Pierre');
+
+        $application2->setContent("Je suis très motivé.");
+
+
+        // On lie les candidatures à l'annonce
+
+        $application1->setAdvert($advert);
+
+        $application2->setAdvert($advert);
+
+
+        // On récupère l'EntityManager
+
+        $em = $this->getDoctrine()->getManager();
+
+
+        // Étape 1 : On « persiste » l'entité
+
+        $em->persist($advert);
+
+
+        // Étape 1 ter : pour cette relation pas de cascade lorsqu'on persiste Advert, car la relation est
+
+        // définie dans l'entité Application et non Advert. On doit donc tout persister à la main ici.
+
+        $em->persist($application1);
+
+        $em->persist($application2);
+
+
+        // Étape 2 : On « flush » tout ce qui a été persisté avant
+
+        $em->flush();
         if($request->isMethod('POST'))
         {
 
@@ -83,6 +137,25 @@ class AdvertController extends Controller
 
     public function editAction($id, Request $request)
     {
+        $em = $this->getDoctrine()->getManager();
+
+        $advert = $em->getRepository("OCPlatformBundle:Advert")->findBy($id);
+
+        if(null === $advert)
+        {
+            throw new NotFoundHttpException("L'annonce d'id " . $id . " n'existe pas.");
+        }
+
+        $listCategories = $em->getRepository('OCPlatformBundle:Category')->findAll();
+
+
+        foreach ($listCategories as $category)
+        {
+            $advert->addCategory($category);
+        }
+
+        $em->flush();
+
         if($request->isMethod('POST'))
         {
             $request->getSession()->getFlashBag()->add('notice', 'Annonce bien modifié');
