@@ -5,6 +5,10 @@ namespace OC\PlatformBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use OC\PlatformBundle\Validator\Antiflood;
 
 /**
  * Advert
@@ -12,6 +16,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
  * @ORM\Table(name="advert")
  * @ORM\Entity(repositoryClass="OC\PlatformBundle\Repository\AdvertRepository")
  * @ORM\HasLifecycleCallbacks()
+ * @UniqueEntity(fields="title", message="Une annonce existe déjà avec ce titre")
  */
 class Advert
 {
@@ -28,6 +33,7 @@ class Advert
      * @var \DateTime
      *
      * @ORM\Column(name="date", type="datetime")
+     * @Assert\DateTime()
      */
     private $date;
 
@@ -35,6 +41,7 @@ class Advert
      * @var string
      *
      * @ORM\Column(name="title", type="string", length=255)
+     * @Assert\Length(min=10)
      */
     private $title;
 
@@ -42,6 +49,7 @@ class Advert
      * @var string
      *
      * @ORM\Column(name="author", type="string", length=255)
+    * @Assert\Length(min=5, minMessage="Le nom doit faire au minimum {{ limit }} caractères.")
      */
     private $author;
 
@@ -49,6 +57,8 @@ class Advert
      * @var string
      *
      * @ORM\Column(name="content", type="text")
+     * @Assert\NotBlank()
+     * @Antiflood()
      */
     private $content;
 
@@ -60,6 +70,7 @@ class Advert
 
     /**
      * @ORM\OneToOne(targetEntity="OC\PlatformBundle\Entity\Image", cascade={"persist"})
+     * @Assert\Valid()
      */
     private $image;
 
@@ -438,5 +449,21 @@ class Advert
     public function getSlug()
     {
         return $this->slug;
+    }
+
+    /**
+     * @Assert\Callback
+     */
+    public function isContentValid(ExecutionContextInterface $context)
+    {
+        $forbiddenwords = array('démotivation', 'abandon');
+
+        if(preg_match('#'.implode('|', $forbiddenwords).'#', $this->getContent()))
+        {
+            $context
+                ->buildViolation('Contenu invalide car il contient un mot interdit.')
+                ->atPath('content')
+                ->addViolation();
+        }
     }
 }
