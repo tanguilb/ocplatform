@@ -34,6 +34,7 @@ framework:
     assets: ~
     php_errors:
         log: true
+    translator:     { fallbacks: ["%locale%"]}
 
 # Twig Configuration
 twig:
@@ -76,3 +77,11 @@ stof_doctrine_extensions:
     orm:
         default:
             sluggable: true
+
+fos_user:
+    db_driver:      orm
+    firewall_name:  main
+    user_class:     OC\UserBundle\Entity\User
+    from_email:
+        address: true
+        sender_name: true
