@@ -2,7 +2,7 @@
 
 {% block title %}Lecture d'une annonce - parent(){% endblock %}
 
-{% block tlbplatform_body %}
+{% block ocplatform_body %}
     {% if advert.image is not null %}
         <img src="{{ asset(advert.image.webPath) }}" alt="{{ advert.image.alt }}">
     {% endif %}
